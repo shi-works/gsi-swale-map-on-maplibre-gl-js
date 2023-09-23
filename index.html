@@ -138,12 +138,12 @@
             container: 'map',
             // style: 'std.json',
             style: 'https://tile2.openstreetmap.jp/styles/osm-bright-ja/style.json',
-            zoom: 10.96,
+            zoom: 9.79,
             minZoom: 1,
             maxZoom: 23,
             pitch: 0,
             bearing: 0,
-            center: [139.685, 35.6806],
+            center: [139.7162, 35.7658],
             hash: true,
             attributionControl: false
         });
@@ -745,7 +745,8 @@
                     .setHTML(
                         '<div style="border-bottom:1px solid #000; font-size: 1.2em; color: #FF00FF;"><strong>' + res + '</strong></div>' +
                         '<div style="border-bottom:1px solid #000;"><strong><span style="color: #0000FF;">説明文: </span></strong>' + text + '</div>' +
-                        '<div><a href="https://www.google.com/maps?q=' + lat + ',' + lng + '&hl=ja" target="_blank">🌎Google Maps</a></div>'
+                        '<div><a href="https://www.google.com/maps?q=' + lat + ',' + lng + '&hl=ja" target="_blank">🌎Google Maps</a></div>' +
+                        '<div><a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + lat + ',' + lng + '&hl=ja" target="_blank">📷Street View</a></div>'
                     )
                     .addTo(map);
             });
