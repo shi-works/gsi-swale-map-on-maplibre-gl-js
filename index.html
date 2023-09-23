@@ -1,0 +1,756 @@
+<html>
+
+<head>
+    <title>地理院 低湿地（明治期）マップ</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@3.1.0/dist/maplibre-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/pmtiles@2.10.0/dist/index.js"></script>
+    <script type="module" src="maplibre-gl-gsi-terrain-fast-png.js"></script>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-overlay {
+            font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            position: absolute;
+            width: 220px;
+            bottom: 20px;
+            left: 0;
+            padding: 10px;
+        }
+
+        .map-overlay .map-overlay-inner {
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .map-overlay label {
+            display: block;
+            margin: 0 0 0px;
+            font-size: 12px;
+            top: 100px;
+            left: 10px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .map-overlay input {
+            background-color: transparent;
+            display: inline-block;
+            width: 100%;
+            position: relative;
+            margin: 0;
+            cursor: ew-resize;
+        }
+
+        .legend {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 3px;
+            bottom: 40px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+            font: 12px/14px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            position: absolute;
+            right: 10px;
+            z-index: 1;
+            line-height: 20px;
+            height: auto;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px;
+        }
+
+        .legend div span {
+            border-radius: 50%;
+            display: inline-block;
+            height: 15px;
+            margin-right: 10px;
+            width: 15px;
+            color: orangered
+        }
+
+        .square {
+            width: 15px;
+            height: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div class="map-overlay top">
+        <div class="map-overlay-inner">
+            <label>低湿地 不透明度: <span id="swale-slider-opacity-value">80%</span></label>
+            <input id="swale-slider-opacity" type="range" min="0" max="100" step="1" value="80">
+            <label>陰影起伏図 不透明度: <span id="hillshade-slider-opacity-value">30%</span></label>
+            <input id="hillshade-slider-opacity" type="range" min="0" max="100" step="1" value="30">
+        </div>
+    </div>
+    <div id="legend-youtochiiki" style="display:block;" class='legend'>
+        <h4>明治期の低湿地</h4>
+        <div class="square" style='background-color: rgb(254, 227, 200, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">砂礫地</span><br>
+        <div class="square" style='background-color: rgb(254, 200, 200, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">泥地</span><br>
+        <div class="square" style='background-color: rgb(228, 172, 123, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">泥炭地</span><br>
+        <div class="square" style='background-color: rgb(200, 200, 228, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">湿地</span><br>
+        <div class="square" style='background-color: rgb(209, 234, 255, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">干潟・砂浜</span><br>
+        <div class="square" style='background-color: rgb(147, 200, 254, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">河川、湖沼、海面</span><br>
+        <div class="square" style='background-color: rgb(251, 247, 176, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">田（水田、陸田）</span><br>
+        <div class="square" style='background-color: rgb(225, 227, 118, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">深田</span><br>
+        <div class="square" style='background-color: rgb(227, 227, 200, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">塩田</span><br>
+        <div class="square" style='background-color: rgb(162, 222, 162, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">草地</span><br>
+        <div class="square" style='background-color: rgb(173, 200, 147, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">荒地</span><br>
+        <div class="square" style='background-color: rgb(119, 227, 201, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">ヨシ（芦葦）</span><br>
+        <div class="square" style='background-color: rgb(173, 255, 173, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">茅</span><br>
+        <div class="square" style='background-color: rgb(144, 73, 11, 1.0); display: inline-block;'>
+        </div><span style="display: inline-block; margin-left: 5px;">堤防</span><br>
+    </div>
+    <script type="text/javascript">
+        // protocolの設定
+        let protocol = new pmtiles.Protocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            // style: 'std.json',
+            style: 'https://tile2.openstreetmap.jp/styles/osm-bright-ja/style.json',
+            zoom: 10.96,
+            minZoom: 1,
+            maxZoom: 23,
+            pitch: 0,
+            bearing: 0,
+            center: [139.685, 35.6806],
+            hash: true,
+            attributionControl: false
+        });
+
+        // ズーム・回転
+        map.addControl(new maplibregl.NavigationControl());
+
+        // フルスクリーンモードのオンオフ
+        map.addControl(new maplibregl.FullscreenControl());
+
+        // 現在位置表示
+        map.addControl(new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: false
+            },
+            fitBoundsOptions: { maxZoom: 18 },
+            trackUserLocation: true,
+            showUserLocation: true
+        }));
+
+        // スケール表示
+        map.addControl(new maplibregl.ScaleControl({
+            maxWidth: 200,
+            unit: 'metric'
+        }));
+
+        // Attributionを折りたたみ表示
+        map.addControl(new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="https://github.com/shi-works/gsi-swale-map-on-maplibre-gl-js" target="_blank">Github</a>） '
+        }));
+
+        // 3D地形コントロール
+        map.addControl(
+            new maplibregl.TerrainControl({
+                source: 'gsidem',
+                exaggeration: 1 // 標高を強調する倍率
+            })
+        );
+
+        map.on('load', () => {
+            // 標高タイルソース
+            map.addSource("gsidem", {
+                type: 'raster-dem',
+                tiles: [
+                    'gsidem://https://cyberjapandata.gsi.go.jp/xyz/dem_png/{z}/{x}/{y}.png',
+                ],
+                attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html#dem" target="_blank">地理院タイル(標高タイル)</a>',
+                tileSize: 256
+            });
+
+            // map.setTerrain({ 'source': 'gsidem', 'exaggeration': 1 });
+
+            // 陰影起伏図ソース
+            map.addSource("hillshade", {
+                type: 'raster',
+                tiles: [
+                    'https://cyberjapandata.gsi.go.jp/xyz/hillshademap/{z}/{x}/{y}.png',
+                ],
+                attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html#hillshademap" target="_blank">地理院タイル(陰影起伏図)</a>',
+                tileSize: 256
+            });
+
+            // 陰影起伏図レイヤ
+            map.addLayer({
+                id: 'hillshade-tiles',
+                type: 'raster',
+                source: 'hillshade',
+                minzoom: 2,
+                maxzoom: 18,
+                paint: {
+                    'raster-opacity': 0.3
+                }
+            });
+
+            // スライダーで陰影起伏図の不透明度を制御
+            const hillshade_sliderOpactiy = document.getElementById('hillshade-slider-opacity');
+            const hillshade_sliderOpactiyValue = document.getElementById('hillshade-slider-opacity-value');
+
+            hillshade_sliderOpactiy.addEventListener('input', (e) => {
+                map.setPaintProperty(
+                    'hillshade-tiles',
+                    'raster-opacity',
+                    parseInt(e.target.value, 10) / 100
+                );
+                hillshade_sliderOpactiyValue.textContent = e.target.value + '%';
+            });
+
+            // 明治期の低湿地ソース
+            map.addSource("swale", {
+                type: 'raster',
+                tiles: [
+                    'https://cyberjapandata.gsi.go.jp/xyz/swale/{z}/{x}/{y}.png',
+                ],
+                attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html#swale" target="_blank">地理院タイル(明治期の低湿地)</a>',
+                tileSize: 256
+            });
+
+            // 明治期の低湿地レイヤ
+            map.addLayer({
+                id: 'swale-tiles',
+                type: 'raster',
+                source: 'swale',
+                minzoom: 1,
+                maxzoom: 18,
+                paint: {
+                    'raster-opacity': 0.8
+                }
+            });
+
+            // スライダーで明治期の低湿地の不透明度を制御
+            const swale_sliderOpactiy = document.getElementById('swale-slider-opacity');
+            const swale_sliderOpactiyValue = document.getElementById('swale-slider-opacity-value');
+
+            swale_sliderOpactiy.addEventListener('input', (e) => {
+                map.setPaintProperty(
+                    'swale-tiles',
+                    'raster-opacity',
+                    parseInt(e.target.value, 10) / 100
+                );
+                swale_sliderOpactiyValue.textContent = e.target.value + '%';
+            });
+
+            // 行政区域ベクトルタイル（ポリゴン）
+            map.addSource("pmtiles-gyouseikai", {
+                type: "vector",
+                url: "pmtiles://" + "https://xs489works.xsrv.jp/pmtiles-data/ksj/N03-23_230101_gyouseikai.pmtiles",
+                attribution: '<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v3_1.html">国土数値情報 行政区域データ（令和5年度）</a>'
+            });
+
+            // 行政区域ラインレイヤ
+            map.addLayer({
+                "id": "gyouseikai-line",
+                "type": "line",
+                "source": "pmtiles-gyouseikai",
+                "source-layer": "N0323_230101_gyouseikai",
+                minzoom: 12,
+                maxzoom: 18,
+                'paint': {
+                    'line-color': 'rgba(0, 0, 0, 1)',
+                    'line-width': 0.5
+                }
+            });
+
+            // 鉄道路線ソース
+            map.addSource('railroad', {
+                'type': 'geojson',
+                'data': './N02-22_RailroadSection.geojson',
+                attribution: '<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v3_1.html">国土数値情報 鉄道データ（令和4年度）</a>'
+            });
+
+            // 鉄道駅ソース
+            map.addSource('station', {
+                'type': 'geojson',
+                'data': './N02-22_Station.geojson',
+                attribution: '<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-v3_1.html">国土数値情報 鉄道データ（令和4年度）</a>'
+            });
+
+            // JR以外の鉄道路線ラインレイヤ
+            map.addLayer({
+                'id': 'non-jr-railroad-lines',
+                'type': 'line',
+                'source': 'railroad',
+                'filter': ['!', ['in', ['get', 'N02_002'], ['literal', ['1', '2']]]],
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'butt'
+                },
+                'paint': {
+                    'line-color': 'rgb(127, 127, 127)',
+                    'line-width': 2,
+                    'line-opacity': 1.0
+                }
+            });
+
+            // JRの鉄道路線ラインレイヤ
+            // 黒色の実線のレイヤー
+            // ズームレベル12～23
+            map.addLayer({
+                'id': 'jr-railroad-lines-white-1',
+                'type': 'line',
+                'source': 'railroad',
+                minzoom: 12,
+                maxzoom: 23,
+                'filter': ['in', ['get', 'N02_002'], ['literal', ['1', '2']]],
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'butt'
+                },
+                'paint': {
+                    'line-color': 'rgb(127, 127, 127)',
+                    'line-width': 4,
+                    'line-opacity': 1.0
+                }
+            });
+
+            // 黒色の実線のレイヤー
+            // ズームレベル1～12
+            map.addLayer({
+                'id': 'jr-railroad-lines-white-2',
+                'type': 'line',
+                'source': 'railroad',
+                minzoom: 1,
+                maxzoom: 12,
+                'filter': ['in', ['get', 'N02_002'], ['literal', ['1', '2']]],
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': 'rgb(127, 127, 127)',
+                    'line-width': 4,
+                    'line-opacity': 1.0
+                }
+            });
+
+            // 白色の点線のレイヤー（白色の実線のレイヤーの上に重ねる）
+            // ズームレベル12～23
+            map.addLayer({
+                'id': 'jr-railroad-lines-black-dotted-3',
+                'type': 'line',
+                'source': 'railroad',
+                minzoom: 12,
+                maxzoom: 23,
+                'filter': ['in', ['get', 'N02_002'], ['literal', ['1', '2']]],
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'butt'
+                },
+                'paint': {
+                    'line-color': 'rgb(255, 255, 255)',
+                    'line-dasharray': [3, 3], // 点線を生成
+                    'line-width': 3,
+                    'line-opacity': 1.0
+                }
+            });
+
+            // 鉄道駅ラインレイヤ
+            map.addLayer({
+                'id': 'station-lines',
+                'type': 'line',
+                'source': 'station',
+                minzoom: 12,
+                maxzoom: 18,
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'butt'
+                },
+                'paint': {
+                    'line-color': 'rgb(0, 0, 0)',
+                    'line-width': 4,
+                    'line-opacity': 1.0
+                }
+            });
+
+            // PLATEAU建築物ソース
+            map.addSource("pmtiles-lod1-Building", {
+                type: "vector",
+                url: "pmtiles://" + "https://xs489works.xsrv.jp/pmtiles-data/plateau/PLATEAU_2020_LOD1_Z14.pmtiles",
+                attribution: '<a href="https://www.geospatial.jp/ckan/dataset/plateau">3D都市モデル「Project PLATEAU」 建築物（国土交通省）を加工して作成</a>'
+            });
+
+            // PLATEAU建築物レイヤ
+            map.addLayer({
+                'id': 'lod1-Building',
+                'source': 'pmtiles-lod1-Building',
+                'source-layer': 'PLATEAU_2020_LOD1fgb',
+                "minzoom": 14,
+                "maxzoom": 18,
+                'layout': {
+                    'visibility': 'visible',
+                },
+                'type': 'fill-extrusion',
+                'paint': {
+                    "fill-extrusion-color": "#aaa",
+                    "fill-extrusion-opacity": 0.5,
+                    "fill-extrusion-height": ["get", "bldg_measuredHeight"]
+                }
+            });
+
+            // 鉄道駅ラベルレイヤ
+            map.addLayer({
+                'id': 'station-labels-1',
+                'type': 'symbol',
+                'source': 'station',
+                minzoom: 12,
+                maxzoom: 15,
+                'layout': {
+                    'text-field': ['concat', ['to-string', ['get', 'N02_005']]],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 12,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'symbol-placement': 'line-center',
+                    'text-offset': [0, -0.75],
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 101, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-width': 1
+                },
+                'filter': ['in', ['get', 'N02_002'], ['literal', ['1', '2']]]
+            });
+
+            // 鉄道駅ラベルレイヤ
+            map.addLayer({
+                'id': 'station-labels-2',
+                'type': 'symbol',
+                'source': 'station',
+                minzoom: 12,
+                maxzoom: 18,
+                'layout': {
+                    'text-field': ['concat', ['to-string', ['get', 'N02_005']]],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 12,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'symbol-placement': 'line-center',
+                    'text-offset': [0, -0.75],
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 101, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-width': 1
+                }
+            });
+
+            // 鉄道路線ラベルレイヤ
+            map.addLayer({
+                'id': 'railroad-labels',
+                'type': 'symbol',
+                'source': 'railroad',
+                minzoom: 1,
+                maxzoom: 15,
+                'layout': {
+                    'text-field': ['concat', ['to-string', ['get', 'N02_004']], " ", ['to-string', ['get', 'N02_003']]],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 12,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'text-offset': [0, -0.75],
+                    'symbol-placement': 'line-center'
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 101, 0, 1)',
+                    'text-halo-color': 'rgb(255, 255, 255)',
+                    'text-halo-width': 1
+                }
+            });
+
+            // 役場ソース
+            map.addSource('town-hall', {
+                'type': 'geojson',
+                'data': './P05-22_01_47_town_hall_add_cityname.geojson',
+                attribution: '<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-P05-v3_0.html">国土数値情報 市町村役場（令和4年度）</a>'
+            });
+
+            // 役場ポイントレイヤ
+            // 外側の黒い円
+            map.addLayer({
+                'id': 'town-hall-points-outer-1',
+                'type': 'circle',
+                'source': 'town-hall',
+                'minzoom': 9,
+                'maxzoom': 12,
+                'paint': {
+                    'circle-color': 'rgba(0, 0, 0, 1)',
+                    'circle-radius': 5.5,
+                    'circle-blur': 0,
+                    'circle-opacity': 1
+                }
+            });
+
+            // 内側の白い円
+            map.addLayer({
+                'id': 'town-hall-points-inner-1',
+                'type': 'circle',
+                'source': 'town-hall',
+                'minzoom': 9,
+                'maxzoom': 12,
+                'paint': {
+                    'circle-color': 'rgba(255, 255, 255, 1)',
+                    'circle-radius': 4,
+                    'circle-blur': 0,
+                    'circle-opacity': 1
+                }
+            });
+
+            // 外側の黒い円
+            map.addLayer({
+                'id': 'town-hall-points-outer-2',
+                'type': 'circle',
+                'source': 'town-hall',
+                'minzoom': 9,
+                'maxzoom': 12,
+                'paint': {
+                    'circle-color': 'rgba(0, 0, 0, 1)',
+                    'circle-radius': 3,
+                    'circle-blur': 0,
+                    'circle-opacity': 1
+                }
+            });
+
+            // 内側の白い円
+            map.addLayer({
+                'id': 'town-hall-points-inner-2',
+                'type': 'circle',
+                'source': 'town-hall',
+                'minzoom': 9,
+                'maxzoom': 12,
+                'paint': {
+                    'circle-color': 'rgba(255, 255, 255, 1)',
+                    'circle-radius': 2.25,
+                    'circle-blur': 0,
+                    'circle-opacity': 1
+                }
+            });
+
+            // 役場ラベルレイヤ
+            map.addLayer({
+                'id': 'town-hall-labels-1',
+                'type': 'symbol',
+                'source': 'town-hall',
+                minzoom: 9,
+                maxzoom: 12,
+                'layout': {
+                    'text-field': ['get', 'city_name'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 12,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'text-offset': [0, -1.0],
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 0, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-width': 1
+                }
+            });
+
+            // 役場ラベルレイヤ
+            map.addLayer({
+                'id': 'town-hall-labels-2',
+                'type': 'symbol',
+                'source': 'town-hall',
+                minzoom: 12,
+                maxzoom: 18,
+                'layout': {
+                    'text-field': ['get', 'city_name'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 18,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'text-offset': [0, -1.0],
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 0, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-width': 2
+                }
+            });
+
+            map.showTileBoundaries = false;
+
+        })
+
+        // PNGタイルからRGB値を取得
+        // 【参考1】https://gsj-seamless.jp/labs/datapng/gridpngtile.html
+        // 【参考2】https://gsj-seamless.jp/labs/datapng/sample/leaflet_shinsuishin1.html
+
+        /// ****************
+        // latLngToTile 緯度経度をタイル座標に変換する関数
+        //  latLng: 緯度経度オブジェクト（lat,lngフィールドを持ちます）
+        //  z: ズームレベル
+        //  戻り値: タイル座標オブジェクト（x, yフィールドを持ちます)
+        //    ※通常，地図ライブラリ内に同様の関数が用意されています．
+        /// ****************
+
+        function latLngToTile(lat, lng, z) {
+            const
+                w = Math.pow(2, (z === undefined) ? 0 : z) / 2,		// 世界全体のピクセル幅
+                yrad = Math.log(Math.tan(Math.PI * (90 + lat) / 360));
+
+            return { x: (lng / 180 + 1) * w, y: (1 - yrad / Math.PI) * w };
+        };
+
+        /// ****************
+        // getLegendItem 凡例情報，タイルURL，座標，ズームレベルを指定して凡例項目を取得する関数
+        //  legend: 凡例情報オブジェクト．r,g,b,titleを持つ凡例項目オブジェクトの配列
+        //	url: タイル画像のURLテンプレート．
+        //		ズームレベル，X, Y座標をそれぞれ{z},{x},{y}として埋め込む
+        //	ll: 緯度経度オブジェクト（lat,lngフィールドを持ちます）
+        //  z:　ズームレベル
+        //  invalid: 追加無効値を相当する数値で指定．デフォルトは指定なし
+        //  戻り値: 成功時に凡例項目オブジェクトを受け取るプロミス．該当するものがない場合はnullを受け取ります
+        /// ****************
+
+        function getLegendItem(legend, url, lat, lng, z, invalid = undefined) {
+            return new Promise(function (resolve, reject) {
+                const
+                    p = latLngToTile(lat, lng, z),
+                    x = Math.floor(p.x),			// タイルX座標
+                    y = Math.floor(p.y),			// タイルY座標
+                    i = (p.x - x) * 256,			// タイル内i座標
+                    j = (p.y - y) * 256,			// タイル内j座標
+                    img = new Image();
+
+                img.crossOrigin = 'anonymous';	// 画像ファイルからデータを取り出すために必要です
+                img.onload = function () {
+                    const
+                        canvas = document.createElement('canvas'),
+                        context = canvas.getContext('2d');
+                    let
+                        v,
+                        d;
+
+                    canvas.width = 1;
+                    canvas.height = 1;
+                    context.drawImage(img, i, j, 1, 1, 0, 0, 1, 1);
+                    d = context.getImageData(0, 0, 1, 1).data;
+                    if (d[3] !== 255) {
+                        v = null;
+                    } else {
+                        v = legend.find(o => o.r == d[0] && o.g == d[1] && o.b == d[2])
+                    }
+                    resolve(v);
+                }
+                img.onerror = function () {
+                    resolve(null);
+                }
+                img.src = url.replace('{z}', z).replace('{y}', y).replace('{x}', x);
+                // console.log("img.src:" + img.src)
+            });
+        };
+
+        // 凡例情報（明治期の低湿地）
+        const legend_swale = [
+            { r: 254, g: 227, b: 200, title: '砂礫地' },
+            { r: 254, g: 200, b: 200, title: '泥地' },
+            { r: 228, g: 172, b: 123, title: '泥炭地' },
+            { r: 200, g: 200, b: 228, title: '湿地' },
+            { r: 209, g: 234, b: 255, title: '干潟・砂浜' },
+            { r: 147, g: 200, b: 254, title: '河川、湖沼、海面' },
+            { r: 251, g: 247, b: 176, title: '田（水田、陸田）' },
+            { r: 225, g: 227, b: 118, title: '深田' },
+            { r: 227, g: 227, b: 200, title: '塩田' },
+            { r: 162, g: 222, b: 162, title: '草地' },
+            { r: 173, g: 200, b: 147, title: '荒地' },
+            { r: 119, g: 227, b: 201, title: 'ヨシ（芦葦）' },
+            { r: 173, g: 255, b: 173, title: '茅' },
+            { r: 144, g: 73, b: 11, title: '堤防' },
+        ];
+
+        // 明治期の低湿地ポップアップ表示
+        map.on('click', function (e) {
+            // ポップアップ表示の対象となるラスターレイヤ
+            RasterTileUrl = 'https://cyberjapandata.gsi.go.jp/xyz/swale/{z}/{x}/{y}.png';
+            // ポップアップ表示の対象となる凡例情報
+            legend = legend_swale;
+            // クリック地点の座標を取得
+            const lng = e.lngLat.lng;
+            const lat = e.lngLat.lat;
+            // ポップアップ表示
+            getLegendItem(legend, RasterTileUrl, lat, lng, Math.trunc(map.getZoom())).then(function (v) {
+                let s = '';
+                let res = (v ? v.title : '取得できません');
+                // 解説文の判定
+                if (res === '砂礫地') {
+                    var text = '土地の表面が砂と小石のところ。砂や礫でできた荒地、風の運搬作用によって砂が堆積してできた砂丘も含む。';
+                } else if (res === '泥地') {
+                    var text = '常にぬかるんでいて植物が存在せず、通過が困難な土地。';
+                } else if (res === '泥炭地') {
+                    var text = '｢泥炭地｣と記された範囲。';
+                } else if (res === '湿地') {
+                    var text = '概ね湿潤で葦(あし)などの植物が生えるような土地のこと。';
+                } else if (res === '干潟・砂浜') {
+                    var text = '満潮時には、海面に没する地形。';
+                } else if (res === '河川、湖沼、海面') {
+                    var text = '河川や水路、湖沼と記された範囲及び、河口部から海上の範囲。養魚場や貯木場、小規模な農業用の池なども含む。';
+                } else if (res === '田（水田、陸田）') {
+                    var text = '水田は稲や蓮などを栽培する田で四季を通じて水がある土地のこと。陸田は稲を栽培する田で冬季に水が涸れ、歩けるような土地のこと。乾田とも言う。';
+                } else if (res === '深田') {
+                    var text = '膝ぐらいまでぬかる泥深い田もしくは小舟を用いて耕作するような田のこと。沼田とも言う。';
+                } else if (res === '塩田') {
+                    var text = '海水から食塩を取るために設けた砂浜の設備。';
+                } else if (res === '草地') {
+                    var text = '牧草を栽培する土地や｢草｣と記された範囲。ただし、山地や台地上のものは取得しない。';
+                } else if (res === '荒地') {
+                    var text = '開墾されたことがないまたは、かつては開墾されていたが長期間荒れ果てたところ。ただし、山地や台地上のものは取得しない。';
+                } else if (res === 'ヨシ（芦葦）') {
+                    var text = '｢蘆｣、｢芦｣、｢葦｣、｢葮｣、｢蓮｣と記された範囲。または芦葦記号。';
+                } else if (res === '茅') {
+                    var text = '｢茅｣、｢萱｣と記された範囲。';
+                } else if (res === '堤防') {
+                    var text = '河川の氾濫や海水の浸入を防ぐため、河岸･海岸に沿って設けた土石の構築物。';
+                }
+                new maplibregl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(
+                        '<div style="border-bottom:1px solid #000; font-size: 1.2em; color: #FF00FF;"><strong>' + res + '</strong></div>' +
+                        '<div style="border-bottom:1px solid #000;"><strong><span style="color: #0000FF;">説明文: </span></strong>' + text + '</div>' +
+                        '<div><a href="https://www.google.com/maps?q=' + lat + ',' + lng + '&hl=ja" target="_blank">🌎Google Maps</a></div>'
+                    )
+                    .addTo(map);
+            });
+        });
+    </script>
+</body>
+
+</html>
