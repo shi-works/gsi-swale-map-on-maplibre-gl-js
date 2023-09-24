@@ -307,6 +307,8 @@
                 'id': 'non-jr-railroad-lines',
                 'type': 'line',
                 'source': 'railroad',
+                minzoom: 7.5,
+                maxzoom: 23,
                 'filter': ['!', ['in', ['get', 'N02_002'], ['literal', ['1', '2']]]],
                 'layout': {
                     'line-join': 'round',
@@ -346,7 +348,7 @@
                 'id': 'jr-railroad-lines-white-2',
                 'type': 'line',
                 'source': 'railroad',
-                minzoom: 1,
+                minzoom: 7.5,
                 maxzoom: 12,
                 'filter': ['in', ['get', 'N02_002'], ['literal', ['1', '2']]],
                 'layout': {
